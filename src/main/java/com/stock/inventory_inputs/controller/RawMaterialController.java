@@ -3,133 +3,102 @@ package com.stock.inventory_inputs.controller;
 import com.stock.inventory_inputs.dto.RawMaterialRequest;
 import com.stock.inventory_inputs.model.RawMaterial;
 import com.stock.inventory_inputs.repository.RawMaterialRepository;
+import com.stock.inventory_inputs.service.RawMaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/raw-materials")
 public class RawMaterialController {
     @Autowired
-    private RawMaterialRepository rawMaterialRepository;
+    private RawMaterialService rawMaterialService;
 
     // CREATE - Criar nova matéria-prima
     @PostMapping
-    public ResponseEntity<RawMaterial> create(@RequestBody RawMaterialRequest request) {
-        // Verificar se já existe com o mesmo código
-        if (rawMaterialRepository.findByCode(request.code()).isPresent()) {
+    public ResponseEntity<?> create(@RequestBody RawMaterialRequest request) {
+        try {
+            RawMaterialRequest created = rawMaterialService.create(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
-                    .body(null); // Código já existe
+                    .body(Map.of("error", e.getMessage()));
         }
-
-        RawMaterial rawMaterial = new RawMaterial();
-        rawMaterial.setCode(request.code());
-        rawMaterial.setName(request.name());
-        rawMaterial.setStockQuantity(request.stockQuantity());
-        rawMaterial.setUnitOfMeasure(request.unitOfMeasure());
-
-        RawMaterial saved = rawMaterialRepository.save(rawMaterial);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     // READ - Listar todas as matérias-primas
     @GetMapping
-    public List<RawMaterial> findAll() {
-        return rawMaterialRepository.findAll();
+    public ResponseEntity<List<RawMaterialRequest>> findAll() {
+        return ResponseEntity.ok(rawMaterialService.findAll());
     }
 
     // READ - Buscar por ID
     @GetMapping("/{id}")
-    public ResponseEntity<RawMaterial> findById(@PathVariable Long id) {
-        return rawMaterialRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> findById(@PathVariable Long id) {
+        RawMaterialRequest material = rawMaterialService.findById(id);
+
+        if (material == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Matéria-prima não encontrada"));
+        }
+
+        return ResponseEntity.ok(material);
     }
 
     // READ - Buscar por código
     @GetMapping("/code/{code}")
-    public ResponseEntity<RawMaterial> findByCode(@PathVariable String code) {
-        return rawMaterialRepository.findByCode(code)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> findByCode(@PathVariable String code) {
+        RawMaterialRequest material = rawMaterialService.findByCode(code);
+
+        if (material == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Matéria-prima não encontrada"));
+        }
+
+        return ResponseEntity.ok(material);
     }
 
     // UPDATE - Atualizar matéria-prima
     @PutMapping("/{id}")
-    public ResponseEntity<RawMaterial> update(@PathVariable Long id,
-                                              @RequestBody RawMaterialRequest request) {
-
-        Optional<RawMaterial> optional = rawMaterialRepository.findById(id);
-
-        if (optional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> update(@PathVariable Long id,
+                                    @RequestBody RawMaterialRequest request) {
+        try {
+            RawMaterialRequest updated = rawMaterialService.update(id, request);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
-
-        RawMaterial existing = optional.get();
-
-        if (!existing.getCode().equals(request.code())) {
-            if (rawMaterialRepository.findByCode(request.code()).isPresent()) {
-                return ResponseEntity.badRequest().build();
-            }
-        }
-
-        existing.setCode(request.code());
-        existing.setName(request.name());
-        existing.setStockQuantity(request.stockQuantity());
-        existing.setUnitOfMeasure(request.unitOfMeasure());
-
-        RawMaterial updated = rawMaterialRepository.save(existing);
-
-        return ResponseEntity.ok(updated);
     }
+
 
     // DELETE - Deletar matéria-prima
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (rawMaterialRepository.existsById(id)) {
-            rawMaterialRepository.deleteById(id);
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            rawMaterialService.delete(id);
             return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
-        return ResponseEntity.notFound().build();
     }
 
     // PATCH - Atualizar apenas o estoque (operação comum)
-    @PatchMapping("/{id}/stock")
-    public ResponseEntity<RawMaterial> updateStock(
-            @PathVariable Long id,
-            @RequestParam Double quantity,
-            @RequestParam(defaultValue = "add") String operation) {
-
-        Optional<RawMaterial> optional = rawMaterialRepository.findById(id);
-
-        if (optional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    @PatchMapping("/{id}/remove-stock")
+    public ResponseEntity<?> removeStock(@PathVariable Long id,
+                                         @RequestParam Double quantity) {
+        try {
+            RawMaterialRequest updated = rawMaterialService.removeFromStock(id, quantity);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
-
-        RawMaterial material = optional.get();
-
-        if (operation.equalsIgnoreCase("add")) {
-
-            material.setStockQuantity(material.getStockQuantity() + quantity);
-
-        } else if (operation.equalsIgnoreCase("remove")) {
-
-            if (material.getStockQuantity() < quantity) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            material.setStockQuantity(material.getStockQuantity() - quantity);
-
-        } else {
-            return ResponseEntity.badRequest().build(); // operação inválida
-        }
-
-        RawMaterial updated = rawMaterialRepository.save(material);
-
-        return ResponseEntity.ok(updated);
     }
 }
