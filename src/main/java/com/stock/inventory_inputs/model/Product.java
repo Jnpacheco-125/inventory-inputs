@@ -27,6 +27,9 @@ public class Product {
     @Column(nullable = false)
     private Double price; // Selling price
 
+    @Column(nullable = false)
+    private Double profit; // Lucro por unidade
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductComposition> composition = new ArrayList<>();
 
