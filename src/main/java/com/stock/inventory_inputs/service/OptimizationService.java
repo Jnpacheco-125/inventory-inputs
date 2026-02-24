@@ -23,7 +23,7 @@ public class OptimizationService {
     /**
      * Método principal que faz toda a análise e otimização
      */
-    public OptimizationResponse optimizeProduction() {
+    public OptimizationResponse optimizeProduction(Integer topN) {
         // 1. Buscar todos os dados do banco
         List<Product> allProducts = productRepository.findAll();
         List<RawMaterial> allMaterials = rawMaterialRepository.findAll();
@@ -41,6 +41,9 @@ public class OptimizationService {
 
         // 4. Ordenar por maior lucro total possível
         analyses.sort((a, b) -> b.totalPossibleProfit().compareTo(a.totalPossibleProfit()));
+
+        // 🔥 NOVO: Limitar para mostrar apenas os topN melhores produtos
+        analyses = analyses.stream().limit(topN).collect(Collectors.toList());
 
         // 5. Pegar o melhor produto
         ProductAnalysis bestProduct = analyses.isEmpty() ? null : analyses.get(0);
@@ -78,6 +81,12 @@ public class OptimizationService {
                 recommendation
         );
     }
+
+    // 🔥 Sobrecarga para manter compatibilidade (quando não passar parâmetro)
+    public OptimizationResponse optimizeProduction() {
+        return optimizeProduction(3); // default = 3
+    }
+
     /**
      * Analisa um produto específico
      */

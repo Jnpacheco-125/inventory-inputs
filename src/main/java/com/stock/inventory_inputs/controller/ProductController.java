@@ -141,14 +141,15 @@ public class ProductController {
         }
     }
 
-    /**
-     * Otimizar produção - encontrar melhor produto
-     */
-    @GetMapping("/optimize")
-    public ResponseEntity<OptimizationResponse> optimizeProduction() {
-        OptimizationResponse response = productService.optimizeProduction();
-        return ResponseEntity.ok(response);
-    }
+//    /**
+//     * Otimizar produção - encontrar melhor produto
+//     */
+//    @GetMapping("/optimize")
+//    public ResponseEntity<OptimizationResponse> optimizeProduction(
+//            @RequestParam(defaultValue = "3") Integer limit) {
+//        OptimizationResponse response = productService.optimizeProduction(limit);
+//        return ResponseEntity.ok(response);
+//    }
 
     /**
      * Verificar se produto é viável com estoque atual

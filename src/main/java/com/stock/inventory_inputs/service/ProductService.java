@@ -9,6 +9,7 @@ import com.stock.inventory_inputs.repository.RawMaterialRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -285,118 +286,121 @@ public class ProductService {
         );
     }
 
-    /**
-     * Otimizar produção - encontrar melhor produto
-     */
-    public OptimizationResponse optimizeProduction() {
-
-        List<Product> allProducts = productRepository.findAll();
-        List<ProductAnalysis> analyses = new ArrayList<>();
-
-        for (Product product : allProducts) {
-
-            Integer maxUnits = calculateMaxUnitsPossible(product.getId());
-            Double totalProfit = product.getProfit() * maxUnits;
-
-            String limitingMaterial = "";
-            Integer minUnits = Integer.MAX_VALUE;
-
-            Map<String, Double> materialsRequired = new HashMap<>();
-
-            for (ProductComposition comp : product.getComposition()) {
-
-                RawMaterial material = comp.getRawMaterial();
-
-                Integer possibleUnits = (int) Math.floor(
-                        material.getStockQuantity() / comp.getRequiredQuantity()
-                );
-
-                if (possibleUnits < minUnits) {
-                    minUnits = possibleUnits;
-                    limitingMaterial = material.getName();
-                }
-
-                materialsRequired.put(
-                        material.getName(),
-                        comp.getRequiredQuantity()
-                );
-            }
-
-            analyses.add(new ProductAnalysis(
-                    product.getId(),
-                    product.getName(),
-                    product.getProfit(),
-                    maxUnits,
-                    totalProfit,
-                    limitingMaterial,
-                    materialsRequired
-            ));
-        }
-
-        // Ordenar por maior lucro total
-        analyses.sort((a, b) -> b.totalPossibleProfit()
-                .compareTo(a.totalPossibleProfit()));
-
-        // 🔥 Preparar dados do melhor produto
-        String bestProductName = null;
-        Integer bestProductQuantity = null;
-        Double bestProductTotalProfit = null;
-        String limitingMaterial = null;
-        Map<String, Double> materialsUsed = new HashMap<>();
-        Map<String, Double> materialsRemaining = new HashMap<>();
-        String recommendation;
-
-        if (analyses.isEmpty()) {
-
-            recommendation = "Não há produtos cadastrados";
-
-        } else {
-
-            ProductAnalysis best = analyses.get(0);
-
-            bestProductName = best.name();
-            bestProductQuantity = best.maxPossibleUnits();
-            bestProductTotalProfit = best.totalPossibleProfit();
-            limitingMaterial = best.limitingMaterial();
-
-            // 🔥 Buscar o produto real pelo ID (mais eficiente)
-            Product bestProduct = allProducts.stream()
-                    .filter(p -> p.getId().equals(best.id()))
-                    .findFirst()
-                    .orElseThrow();
-
-            // 🔹 Calcular materiais usados e restantes corretamente
-            for (ProductComposition comp : bestProduct.getComposition()) {
-
-                RawMaterial material = comp.getRawMaterial();
-
-                double used = comp.getRequiredQuantity() * bestProductQuantity;
-                double remaining = material.getStockQuantity() - used;
-
-                materialsUsed.put(material.getName(), used);
-                materialsRemaining.put(material.getName(), remaining);
-            }
-
-            recommendation = String.format(
-                    "Recomendação: Produzir %s. Quantidade: %d unidades. Lucro total: R$ %.2f. Material limitante: %s",
-                    bestProductName,
-                    bestProductQuantity,
-                    bestProductTotalProfit,
-                    limitingMaterial
-            );
-        }
-
-        return new OptimizationResponse(
-                analyses,
-                bestProductName,
-                bestProductQuantity,
-                bestProductTotalProfit,
-                limitingMaterial,
-                materialsUsed,
-                materialsRemaining,
-                recommendation
-        );
-    }
+//    /**
+//     * Otimizar produção - encontrar melhor produto
+//     */
+//    public OptimizationResponse optimizeProduction(@RequestParam(defaultValue = "3") Integer limit) {
+//
+//        List<Product> allProducts = productRepository.findAll();
+//        List<ProductAnalysis> analyses = new ArrayList<>();
+//
+//        for (Product product : allProducts) {
+//
+//            Integer maxUnits = calculateMaxUnitsPossible(product.getId());
+//            Double totalProfit = product.getProfit() * maxUnits;
+//
+//            String limitingMaterial = "";
+//            Integer minUnits = Integer.MAX_VALUE;
+//
+//            Map<String, Double> materialsRequired = new HashMap<>();
+//
+//            for (ProductComposition comp : product.getComposition()) {
+//
+//                RawMaterial material = comp.getRawMaterial();
+//
+//                Integer possibleUnits = (int) Math.floor(
+//                        material.getStockQuantity() / comp.getRequiredQuantity()
+//                );
+//
+//                if (possibleUnits < minUnits) {
+//                    minUnits = possibleUnits;
+//                    limitingMaterial = material.getName();
+//                }
+//
+//                materialsRequired.put(
+//                        material.getName(),
+//                        comp.getRequiredQuantity()
+//                );
+//            }
+//
+//            analyses.add(new ProductAnalysis(
+//                    product.getId(),
+//                    product.getName(),
+//                    product.getProfit(),
+//                    maxUnits,
+//                    totalProfit,
+//                    limitingMaterial,
+//                    materialsRequired
+//            ));
+//        }
+//
+//        // Ordenar por maior lucro total
+//        analyses.sort((a, b) -> b.totalPossibleProfit()
+//                .compareTo(a.totalPossibleProfit()));
+//
+//        // 🔥 Limitar dinamicamente
+//        analyses = analyses.stream().limit(limit).collect(Collectors.toList());
+//
+//        // 🔥 Preparar dados do melhor produto
+//        String bestProductName = null;
+//        Integer bestProductQuantity = null;
+//        Double bestProductTotalProfit = null;
+//        String limitingMaterial = null;
+//        Map<String, Double> materialsUsed = new HashMap<>();
+//        Map<String, Double> materialsRemaining = new HashMap<>();
+//        String recommendation;
+//
+//        if (analyses.isEmpty()) {
+//
+//            recommendation = "Não há produtos cadastrados";
+//
+//        } else {
+//
+//            ProductAnalysis best = analyses.get(0);
+//
+//            bestProductName = best.name();
+//            bestProductQuantity = best.maxPossibleUnits();
+//            bestProductTotalProfit = best.totalPossibleProfit();
+//            limitingMaterial = best.limitingMaterial();
+//
+//            // 🔥 Buscar o produto real pelo ID (mais eficiente)
+//            Product bestProduct = allProducts.stream()
+//                    .filter(p -> p.getId().equals(best.id()))
+//                    .findFirst()
+//                    .orElseThrow();
+//
+//            // 🔹 Calcular materiais usados e restantes corretamente
+//            for (ProductComposition comp : bestProduct.getComposition()) {
+//
+//                RawMaterial material = comp.getRawMaterial();
+//
+//                double used = comp.getRequiredQuantity() * bestProductQuantity;
+//                double remaining = material.getStockQuantity() - used;
+//
+//                materialsUsed.put(material.getName(), used);
+//                materialsRemaining.put(material.getName(), remaining);
+//            }
+//
+//            recommendation = String.format(
+//                    "Recomendação: Produzir %s. Quantidade: %d unidades. Lucro total: R$ %.2f. Material limitante: %s",
+//                    bestProductName,
+//                    bestProductQuantity,
+//                    bestProductTotalProfit,
+//                    limitingMaterial
+//            );
+//        }
+//
+//        return new OptimizationResponse(
+//                analyses,
+//                bestProductName,
+//                bestProductQuantity,
+//                bestProductTotalProfit,
+//                limitingMaterial,
+//                materialsUsed,
+//                materialsRemaining,
+//                recommendation
+//        );
+//    }
 
     /**
      * Verificar se produto é viável com estoque atual
@@ -417,6 +421,12 @@ public class ProductService {
      * Simular produção
      */
     public Map<String, Object> simulateProduction(Long productId, Integer quantity) {
+
+        // 🔥 VALIDAÇÃO NO SERVICE
+        if (quantity == null || quantity <= 0) {
+            throw new RuntimeException("Quantidade deve ser maior que zero");
+        }
+
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
@@ -452,6 +462,11 @@ public class ProductService {
      */
     @Transactional
     public void produce(Long productId, Integer quantity) {
+        // 🔥 ADICIONE ESTA VALIDAÇÃO AQUI
+        if (quantity == null || quantity <= 0) {
+            throw new RuntimeException("Quantidade deve ser maior que zero");
+        }
+
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
