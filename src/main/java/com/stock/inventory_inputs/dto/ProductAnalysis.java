@@ -1,7 +1,7 @@
 package com.stock.inventory_inputs.dto;
 
 import java.util.Map;
-// Análise individual de cada produto
+
 public record ProductAnalysis(
         Long id,
         String name,

@@ -2,17 +2,14 @@ package com.stock.inventory_inputs.controller;
 
 import com.stock.inventory_inputs.dto.RawMaterialRequest;
 import com.stock.inventory_inputs.dto.RawMaterialResponseDTO;
-import com.stock.inventory_inputs.model.RawMaterial;
-import com.stock.inventory_inputs.repository.RawMaterialRepository;
 import com.stock.inventory_inputs.service.RawMaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api/raw-materials")
@@ -20,7 +17,6 @@ public class RawMaterialController {
     @Autowired
     private RawMaterialService rawMaterialService;
 
-    // CREATE - Criar nova matéria-prima
     @PostMapping
     public ResponseEntity<?> create(@RequestBody RawMaterialRequest request) {
         try {
@@ -32,13 +28,11 @@ public class RawMaterialController {
         }
     }
 
-    // READ - Listar todas as matérias-primas
     @GetMapping
     public ResponseEntity<List<RawMaterialResponseDTO>> findAll() {
         return ResponseEntity.ok(rawMaterialService.findAll());
     }
 
-    // READ - Buscar por ID
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id) {
         RawMaterialResponseDTO material = rawMaterialService.findById(id);
@@ -51,7 +45,6 @@ public class RawMaterialController {
         return ResponseEntity.ok(material);
     }
 
-    // READ - Buscar por código
     @GetMapping("/code/{code}")
     public ResponseEntity<?> findByCode(@PathVariable String code) {
         RawMaterialRequest material = rawMaterialService.findByCode(code);
@@ -64,7 +57,6 @@ public class RawMaterialController {
         return ResponseEntity.ok(material);
     }
 
-    // UPDATE - Atualizar matéria-prima
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id,
                                     @RequestBody RawMaterialRequest request) {
@@ -77,8 +69,6 @@ public class RawMaterialController {
         }
     }
 
-
-    // DELETE - Deletar matéria-prima
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
@@ -89,8 +79,6 @@ public class RawMaterialController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
-
-    // PATCH - Atualizar apenas o estoque (operação comum)
 
     @PatchMapping("/{id}/stock/add")
     public ResponseEntity<?> addToStock(@PathVariable Long id, @RequestParam Double quantity) {
