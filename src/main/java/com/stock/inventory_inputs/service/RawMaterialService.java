@@ -1,6 +1,7 @@
 package com.stock.inventory_inputs.service;
 
 import com.stock.inventory_inputs.dto.RawMaterialRequest;
+import com.stock.inventory_inputs.dto.RawMaterialResponseDTO;
 import com.stock.inventory_inputs.model.RawMaterial;
 import com.stock.inventory_inputs.repository.ProductCompositionRepository;
 import com.stock.inventory_inputs.repository.RawMaterialRepository;
@@ -42,22 +43,31 @@ public class RawMaterialService {
                 material.getUnitOfMeasure()
         );
     }
+    private RawMaterialResponseDTO toResponseDTO(RawMaterial material) {
+        return new RawMaterialResponseDTO(
+                material.getId(),           // ✅ Agora inclui o ID
+                material.getCode(),
+                material.getName(),
+                material.getStockQuantity(),
+                material.getUnitOfMeasure()
+        );
+    }
 
     /**
      * Listar todas as matérias-primas
      */
-    public List<RawMaterialRequest> findAll() {
+    public List<RawMaterialResponseDTO> findAll() {
         return rawMaterialRepository.findAll().stream()
-                .map(this::toDTO)
+                .map(this::toResponseDTO)  // Usa o método com ID
                 .collect(Collectors.toList());
     }
 
     /**
      * Buscar matéria-prima por ID
      */
-    public RawMaterialRequest findById(Long id) {
+    public RawMaterialResponseDTO findById(Long id) {
         return rawMaterialRepository.findById(id)
-                .map(this::toDTO)
+                .map(this::toResponseDTO)
                 .orElse(null);
     }
 
@@ -94,7 +104,7 @@ public class RawMaterialService {
      * Atualizar matéria-prima
      */
     @Transactional
-    public RawMaterialRequest update(Long id, RawMaterialRequest request) {
+    public RawMaterialResponseDTO update(Long id, RawMaterialRequest request) {
         RawMaterial existing = rawMaterialRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Matéria-prima não encontrada com ID: " + id));
 
@@ -116,7 +126,7 @@ public class RawMaterialService {
         existing.setUnitOfMeasure(request.unitOfMeasure());
 
         RawMaterial updated = rawMaterialRepository.save(existing);
-        return toDTO(updated);
+        return toResponseDTO(updated);  // ← MUDOU AQUI: agora usa toResponseDTO
     }
 
     /**
@@ -143,7 +153,7 @@ public class RawMaterialService {
      * Adicionar ao estoque
      */
     @Transactional
-    public RawMaterialRequest addToStock(Long id, Double quantity) {
+    public RawMaterialResponseDTO addToStock(Long id, Double quantity) {
         if (quantity <= 0) {
             throw new RuntimeException("Quantidade deve ser positiva");
         }
@@ -153,14 +163,14 @@ public class RawMaterialService {
 
         material.setStockQuantity(material.getStockQuantity() + quantity);
         RawMaterial updated = rawMaterialRepository.save(material);
-        return toDTO(updated);
+        return toResponseDTO(updated);  // ← MUDOU PARA toResponseDTO
     }
 
     /**
      * Remover do estoque
      */
     @Transactional
-    public RawMaterialRequest removeFromStock(Long id, Double quantity) {
+    public RawMaterialResponseDTO removeFromStock(Long id, Double quantity) {
         if (quantity <= 0) {
             throw new RuntimeException("Quantidade deve ser positiva");
         }
@@ -174,6 +184,6 @@ public class RawMaterialService {
 
         material.setStockQuantity(material.getStockQuantity() - quantity);
         RawMaterial updated = rawMaterialRepository.save(material);
-        return toDTO(updated);
+        return toResponseDTO(updated);  // ← MUDOU PARA toResponseDTO
     }
 }
