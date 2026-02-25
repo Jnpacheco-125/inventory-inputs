@@ -159,7 +159,6 @@ public class ProductController {
         try {
             productService.produce(id, quantity);
 
-            // Buscar produto atualizado
             ProductResponseDTO product = productService.findById(id);
 
             return ResponseEntity.ok(Map.of(
