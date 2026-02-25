@@ -1,6 +1,7 @@
 package com.stock.inventory_inputs.controller;
 
 import com.stock.inventory_inputs.dto.RawMaterialRequest;
+import com.stock.inventory_inputs.dto.RawMaterialResponseDTO;
 import com.stock.inventory_inputs.model.RawMaterial;
 import com.stock.inventory_inputs.repository.RawMaterialRepository;
 import com.stock.inventory_inputs.service.RawMaterialService;
@@ -33,18 +34,18 @@ public class RawMaterialController {
 
     // READ - Listar todas as matérias-primas
     @GetMapping
-    public ResponseEntity<List<RawMaterialRequest>> findAll() {
+    public ResponseEntity<List<RawMaterialResponseDTO>> findAll() {
         return ResponseEntity.ok(rawMaterialService.findAll());
     }
 
     // READ - Buscar por ID
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id) {
-        RawMaterialRequest material = rawMaterialService.findById(id);
+        RawMaterialResponseDTO material = rawMaterialService.findById(id);
 
         if (material == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Matéria-prima não encontrada"));
+                    .body(Map.of("error", "Matéria-prima não encontrada com ID: " + id));
         }
 
         return ResponseEntity.ok(material);
@@ -68,7 +69,7 @@ public class RawMaterialController {
     public ResponseEntity<?> update(@PathVariable Long id,
                                     @RequestBody RawMaterialRequest request) {
         try {
-            RawMaterialRequest updated = rawMaterialService.update(id, request);
+            RawMaterialResponseDTO updated = rawMaterialService.update(id, request);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -90,14 +91,25 @@ public class RawMaterialController {
     }
 
     // PATCH - Atualizar apenas o estoque (operação comum)
-    @PatchMapping("/{id}/remove-stock")
-    public ResponseEntity<?> removeStock(@PathVariable Long id,
-                                         @RequestParam Double quantity) {
+
+    @PatchMapping("/{id}/stock/add")
+    public ResponseEntity<?> addToStock(@PathVariable Long id, @RequestParam Double quantity) {
         try {
-            RawMaterialRequest updated = rawMaterialService.removeFromStock(id, quantity);
+            RawMaterialResponseDTO updated = rawMaterialService.addToStock(id, quantity);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/stock/remove")
+    public ResponseEntity<?> removeFromStock(@PathVariable Long id, @RequestParam Double quantity) {
+        try {
+            RawMaterialResponseDTO updated = rawMaterialService.removeFromStock(id, quantity);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         }
     }
