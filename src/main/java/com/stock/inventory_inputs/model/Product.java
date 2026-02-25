@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,21 +18,20 @@ public class Product {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String code;  // Product code
+    private String code;
 
     @Column(nullable = false)
-    private String name;  // Product name
+    private String name;
 
     @Column(nullable = false)
-    private Double price; // Selling price
+    private Double price;
 
     @Column(nullable = false)
-    private Double profit; // Lucro por unidade
+    private Double profit;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductComposition> composition = new ArrayList<>();
 
-    // Helper method to add raw material to composition
     public void addRawMaterial(RawMaterial rawMaterial, Double quantity) {
         ProductComposition item = new ProductComposition();
         item.setProduct(this);

@@ -5,9 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "raw_materials")
 @Data
@@ -19,14 +16,14 @@ public class RawMaterial {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String code;  // Material code
+    private String code;
 
     @Column(nullable = false)
-    private String name;  // Material name
+    private String name;
 
     @Column(nullable = false)
-    private Double stockQuantity; // Quantity in stock
+    private Double stockQuantity;
 
     @Column(nullable = false)
-    private String unitOfMeasure; // e.g., "g", "kg", "unit", "ml", "L"
+    private String unitOfMeasure;
 }

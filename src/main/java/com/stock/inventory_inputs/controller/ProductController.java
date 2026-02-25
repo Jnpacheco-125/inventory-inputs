@@ -1,18 +1,11 @@
 package com.stock.inventory_inputs.controller;
 
 import com.stock.inventory_inputs.dto.*;
-import com.stock.inventory_inputs.model.Product;
-import com.stock.inventory_inputs.model.RawMaterial;
-import com.stock.inventory_inputs.repository.ProductRepository;
-import com.stock.inventory_inputs.repository.RawMaterialRepository;
 import com.stock.inventory_inputs.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.stream.*;
-import java.util.stream.Collectors;
-
 import java.util.List;
 import java.util.Map;
 
@@ -22,11 +15,6 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    // ========== CRUD ==========
-
-    /**
-     * Criar novo produto
-     */
     @PostMapping
     public ResponseEntity<?> create(@RequestBody ProductRequest request) {
         try {
@@ -38,18 +26,12 @@ public class ProductController {
         }
     }
 
-    /**
-     * Listar todos os produtos
-     */
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> findAll() {
         List<ProductResponseDTO> products = productService.findAll();
         return ResponseEntity.ok(products);
     }
 
-    /**
-     * Buscar por ID
-     */
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> findById(@PathVariable Long id) {
         ProductResponseDTO product = productService.findById(id);
@@ -58,9 +40,6 @@ public class ProductController {
                 : ResponseEntity.notFound().build();
     }
 
-    /**
-     * Buscar por código
-     */
     @GetMapping("/code/{code}")
     public ResponseEntity<ProductResponseDTO> findByCode(@PathVariable String code) {
         ProductResponseDTO product = productService.findByCode(code);
@@ -69,9 +48,6 @@ public class ProductController {
                 : ResponseEntity.notFound().build();
     }
 
-    /**
-     * Atualizar produto
-     */
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProductRequest request) {
         try {
@@ -83,9 +59,6 @@ public class ProductController {
         }
     }
 
-    /**
-     * Deletar produto
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
@@ -97,11 +70,6 @@ public class ProductController {
         }
     }
 
-    // ========== ENDPOINTS ADICIONAIS ==========
-
-    /**
-     * Ver composição de um produto (versão simplificada)
-     */
     @GetMapping("/{id}/composition")
     public ResponseEntity<?> getComposition(@PathVariable Long id) {
         try {
@@ -110,7 +78,6 @@ public class ProductController {
                 return ResponseEntity.notFound().build();
             }
 
-            // Formatar composição de forma legível
             List<Map<String, Object>> composition = product.composition().stream()
                     .map(comp -> Map.<String, Object>of(
                             "rawMaterialCode", comp.rawMaterialCode(),
@@ -127,9 +94,6 @@ public class ProductController {
         }
     }
 
-    /**
-     * Analisar um produto específico
-     */
     @GetMapping("/{id}/analysis")
     public ResponseEntity<?> analyzeProduct(@PathVariable Long id) {
         try {
@@ -141,19 +105,6 @@ public class ProductController {
         }
     }
 
-//    /**
-//     * Otimizar produção - encontrar melhor produto
-//     */
-//    @GetMapping("/optimize")
-//    public ResponseEntity<OptimizationResponse> optimizeProduction(
-//            @RequestParam(defaultValue = "3") Integer limit) {
-//        OptimizationResponse response = productService.optimizeProduction(limit);
-//        return ResponseEntity.ok(response);
-//    }
-
-    /**
-     * Verificar se produto é viável com estoque atual
-     */
     @GetMapping("/{id}/feasible")
     public ResponseEntity<?> isProductFeasible(@PathVariable Long id) {
         try {
@@ -168,18 +119,12 @@ public class ProductController {
         }
     }
 
-    /**
-     * Listar apenas produtos viáveis
-     */
     @GetMapping("/feasible")
     public ResponseEntity<List<ProductResponseDTO>> findFeasibleProducts() {
         List<ProductResponseDTO> products = productService.findFeasibleProducts();
         return ResponseEntity.ok(products);
     }
 
-    /**
-     * Calcular máximo de unidades possíveis
-     */
     @GetMapping("/{id}/max-units")
     public ResponseEntity<?> calculateMaxUnits(@PathVariable Long id) {
         try {
@@ -194,9 +139,6 @@ public class ProductController {
         }
     }
 
-    /**
-     * Simular produção
-     */
     @PostMapping("/{id}/simulate")
     public ResponseEntity<?> simulateProduction(
             @PathVariable Long id,
@@ -210,9 +152,6 @@ public class ProductController {
         }
     }
 
-    /**
-     * Produzir (consumir matérias-primas)
-     */
     @PostMapping("/{id}/produce")
     public ResponseEntity<?> produce(
             @PathVariable Long id,

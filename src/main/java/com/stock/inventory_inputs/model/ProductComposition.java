@@ -26,5 +26,5 @@ public class ProductComposition {
     private RawMaterial rawMaterial;
 
     @Column(nullable = false)
-    private Double requiredQuantity; // Quantity of raw material needed for 1 product unit
+    private Double requiredQuantity;
 }
