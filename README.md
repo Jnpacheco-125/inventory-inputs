@@ -27,16 +27,8 @@ finding the most profitable combination of products based on available stock.
 git clone https://github.com/seu-usuario/inventory-inputs.git
 cd inventory-inputs
 ````
-### 2. onfigure the H2 database (already configured in application.properties)
-````
-spring.datasource.url=jdbc:h2:mem:inventorydb
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
-spring.h2.console.enabled=true
-spring.h2.console.path=/h2-console
-````
-### 3.Run the application
+
+### 2. Run the application
 ````
 ./mvnw spring-boot:run
 ````
@@ -53,7 +45,7 @@ Or run the InventoryInputsApplication.java class from your IDE.
 | `service/` | Business rules (ProductService, RawMaterialService, OptimizationService) |
 | `config/` | Configurations (DataLoader to populate the database) |
 
-#### 📊 Data Model
+## 📊 Data Model
 
 ## 📦 Raw Materials
 
